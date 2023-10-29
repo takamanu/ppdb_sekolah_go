@@ -33,6 +33,8 @@ func New() *echo.Echo {
 	e.DELETE("/nilai/:id", controllers.DeleteNilaiController)
 	e.PUT("/nilai/:id", controllers.UpdateNilaiController)
 
+	e.POST("/login", controllers.LoginUserController)
+
 	eAuthBasic := e.Group("/auth")
 	eAuthBasic.Use(mid.BasicAuth(m.BasicAuthDB))
 	eAuthBasic.GET("/users", controllers.GetUsersController)

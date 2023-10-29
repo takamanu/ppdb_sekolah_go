@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"ppdb_sekolah_go/configs"
+	"ppdb_sekolah_go/constans"
 	m "ppdb_sekolah_go/middlewares"
 	"ppdb_sekolah_go/models"
 
@@ -22,8 +23,10 @@ func GetUsersController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success",
-		"users":   users,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success get all users",
+		constans.DATA:    users,
+		//USAGE OF THE GLOBAL VARIABLE
 	})
 }
 
@@ -39,8 +42,9 @@ func GetUserController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success",
-		"user":    user,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success get user by id",
+		constans.DATA:    user,
 	})
 }
 
@@ -53,7 +57,7 @@ func CreateUserController(c echo.Context) error {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to hash password")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to hash password")
 	}
 
 	user.Password = string(hashedPassword)
@@ -65,8 +69,9 @@ func CreateUserController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success create new user",
-		"user":    user,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success create new user",
+		constans.DATA:    user,
 	})
 }
 
@@ -90,7 +95,8 @@ func DeleteUserController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success deleted user",
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success deleted user",
 	})
 }
 
@@ -99,13 +105,13 @@ func UpdateUserController(c echo.Context) error {
 	// get user id from url param
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user id")
 	}
 
 	// get user by id
 	var user models.User
 	if err := configs.DB.First(&user, userId).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "user not found")
+		return echo.NewHTTPError(http.StatusBadRequest, "User not found")
 	}
 
 	// bind request body to user struct
@@ -119,7 +125,7 @@ func UpdateUserController(c echo.Context) error {
 		// encrypt new password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to encrypt password")
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to encrypt password")
 		}
 		user.Password = string(hashedPassword)
 	}
@@ -130,8 +136,9 @@ func UpdateUserController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success updated",
-		"user":    user,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success user updated",
+		constans.DATA:    user,
 	})
 }
 
@@ -142,8 +149,9 @@ func LoginUserController(c echo.Context) error {
 	err := configs.DB.Where("email = ?", user.Email).First(&user).Error
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"message": "failed to login",
-			"error":   err.Error(),
+			constans.SUCCESS: false,
+			constans.MESSAGE: "Failed to login",
+			constans.ERROR:   err.Error(),
 		})
 	}
 
@@ -160,14 +168,16 @@ func LoginUserController(c echo.Context) error {
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"message": "failed to login",
-			"error":   err.Error(),
+			constans.SUCCESS: false,
+			constans.MESSAGE: "Failed to login",
+			constans.ERROR:   err.Error(),
 		})
 	}
 	userResponse := models.UserResponse{user.ID, user.Name, user.Email, token}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success login",
-		"user":    userResponse,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success login",
+		constans.DATA:    userResponse,
 	})
 }

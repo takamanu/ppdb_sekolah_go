@@ -6,8 +6,10 @@ import (
 	loger "log"
 	"net/http"
 	"ppdb_sekolah_go/configs"
+	"ppdb_sekolah_go/constans"
 	"ppdb_sekolah_go/models"
 	"strconv"
+	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
@@ -22,8 +24,9 @@ func GetDatapokokController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success",
-		"users":   users,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success get all datapokok",
+		constans.DATA:    users,
 	})
 }
 
@@ -49,8 +52,9 @@ func GetDatapokokControllerByID(c echo.Context) error {
 	user.Nilai = append(user.Nilai, nilai)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success",
-		"user":    user,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success get datapokok by ID",
+		constans.DATA:    user,
 	})
 }
 
@@ -65,7 +69,36 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	if err := c.Bind(&requestData); err != nil {
 		log.Errorf("Failed to bind request: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+
 	}
+
+	userIDDatapokokStr := c.FormValue("user_id")
+	userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
+	if err != nil {
+		log.Errorf("Failed to convert user_id to a uint: %s", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user_id")
+	}
+
+	requestData.Datapokok.UserID = uint64(userIDDatapokok)
+
+	requestData.Datapokok.Email = c.FormValue("email")
+	requestData.Datapokok.NamaLengkap = c.FormValue("nama_lengkap")
+	requestData.Datapokok.NISN = c.FormValue("nisn")
+	requestData.Datapokok.JenisKelamin = c.FormValue("jenis_kelamin")
+	requestData.Datapokok.TempatLahir = c.FormValue("tempat_lahir")
+
+	// Date of birth handling
+	dobStr := c.FormValue("tanggal_lahir")
+	dob, err := time.Parse("2006-01-02", dobStr)
+	if err == nil {
+		requestData.Datapokok.TanggalLahir = &dob
+	}
+
+	requestData.Datapokok.AsalSekolah = c.FormValue("asal_sekolah")
+	requestData.Datapokok.NamaAyah = c.FormValue("nama_ayah")
+	requestData.Datapokok.NoWaAyah = c.FormValue("no_wa_ayah")
+	requestData.Datapokok.NamaIbu = c.FormValue("nama_ibu")
+	requestData.Datapokok.NoWaIbu = c.FormValue("no_wa_ibu")
 
 	// Create the Datapokok record in the database
 	if err := configs.DB.Create(&requestData.Datapokok).Error; err != nil {
@@ -74,7 +107,7 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	}
 
 	// Handle file upload
-	image, err := c.FormFile("fashion_url_image")
+	image, err := c.FormFile("pas_foto")
 	if err != nil {
 		log.Errorf("Failed to get the image file: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, "Image upload failed")
@@ -125,8 +158,9 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 
 	// Return a response
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "Success create new Datapokok and Nilai",
-		"data":    requestData.Datapokok,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success create new Datapokok and Nilai",
+		constans.DATA:    requestData.Datapokok,
 	})
 }
 
@@ -150,7 +184,8 @@ func DeleteDatapokokController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success deleted datapokok",
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success deleted datapokok",
 	})
 }
 
@@ -179,7 +214,8 @@ func UpdateDatapokokController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success updated",
-		"user":    user,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "Success datapokok updated",
+		constans.DATA:    user,
 	})
 }

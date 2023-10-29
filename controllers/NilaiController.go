@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"ppdb_sekolah_go/configs"
+	"ppdb_sekolah_go/constans"
 	"ppdb_sekolah_go/models"
 
 	loger "log"
@@ -19,8 +20,9 @@ func GetNilaiController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success",
-		"nilais":  nilais,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success",
+		constans.DATA:    nilais,
 	})
 }
 
@@ -36,8 +38,9 @@ func GetNilaiControllerById(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success",
-		"nilai":   nilai,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success",
+		constans.DATA:    nilai,
 	})
 }
 
@@ -56,8 +59,9 @@ func CreateNilaiController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success create new nilai",
-		"nilai":   nilai,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success create new nilai",
+		constans.DATA:    nilai,
 	})
 }
 
@@ -81,7 +85,8 @@ func DeleteNilaiController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success deleted nilai",
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success deleted nilai",
 	})
 }
 
@@ -110,7 +115,8 @@ func UpdateNilaiController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success updated",
-		"nilai":   nilai,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success updated",
+		constans.DATA:    nilai,
 	})
 }
