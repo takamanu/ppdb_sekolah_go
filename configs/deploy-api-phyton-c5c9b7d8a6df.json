@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "deploy-api-phyton",
+  "private_key_id": "c5c9b7d8a6df58c84f8ecad96736654f2acc2d24",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCnnMr9z/wYxa0K\n4Tyz5m/rFmGQlmcWQRMoEDj78PpZbWdALpfZuZkyDsncN+Cr2X7CMuwBNGUWZjWn\nv0BpBBWvCjSoJGQyz3uwqbbeRdkB4gPdvRYNlt+qkwQpuaL43SaJGEYNZ213ZP9v\npBdrJYX6Aw+APqx+wAcGqGIcp697LspmXRjHupDo4SUju8kDjLKKNIrBE2FWFoG4\n6Gq4cdh8bIG9CgBlaXymjMg3ZAZTRrREMQfRczkg/9V4URubwQlLz6vMsTBA6Egk\n4WS4lJ9ea0IQada8ZrdwgSgvdM2VgPNac21zS8aUhTzd+EglK5axpThT85igEnui\nbdyct+15AgMBAAECggEALkdFaOT3NyPFTn64EvfqKN+qGpDcb7GSB3rLMQztIqnp\nWzhCJxRurvqUU6B+ARTxQc9riD2eN5wK7oEI2LYPAqBvv4kkvT66aSHC4wYoD7QG\n2z9tCl2A7gjfmmGuFMaC8FFqbiMDf3a8bGfDK4tVvZ0At6kWWXzNs9HkHQNTmU/0\niH24FByjKwAud9L9+1hj5+Cc7fgnYmxgTAri5UqbmAE+fLnaVncjCBgt+/YYXEs3\nKh/+qlUSzlShnUIPZFKOaGeH8X8Qdwbtx9on6v35AVZ6xzWyW35sq6D4CUYIajiS\nITcS0nlLT3tDCA1OcL16J2G3u52niHrHbXngI+rZXQKBgQDXykuPO9hEMvQtJ1+0\nHGtp4jxf0bd75H5xa/BLXXrL1CeAXTkfAKRzCelhWQj7e0UlZUue1HigLUFEh43L\nQ6I8XUo0c7eZGdIqG0l8rx1xFqnSrqAxrjuUGKfZs3HYbm+GIr5bHxgLDeSUARC1\nJzNSeUGTfwz/hkXWz7OM7iu0mwKBgQDG2E4jKbfWwOKT5+jzm9+4ckII6oFTYE8f\ncl9txdB8HgH+3t7M/QTZol10iHqWO++u6PsoagSOLhxr/RcO5Gh/uqSkelW0qcaj\nm436Yl7N+Tc2OvInwwxO5xkTCHBvkVvduNRENJhEog004HcJnmA9BWrbhXiOZ0C5\n0IQ3aFVlewKBgCvKzhK/XmBYxtzzBKUUr2fJld8MPGRUNqTl9toUmnsLDwkp4hG8\nm6MM++PZoc0HczznlbUiAWjgRkKWD9yUWTRO6mRCp5vWdaQ97Wf0UdFFfClZbwEm\nDsk7R7USiaQWpWNfYao0YTi9FQpEPRPGZM/z867vNcAVi87QT+vl2dDJAoGAP0/y\nGSoYWe2SdyuZNa/E3RKsSfB4+xYoO0gMcIRSrKJVWlSWNki9uZoEDa3C8oDlARk3\nlxeima6+5/du1xQM3daMw74b+ekw0TkfTMDzlLusQ70jC1wEWD8m8bN3MV7kFEXc\neFcSwI+kitiJrmtaEzPdYUYvK5BewItO/eFfh28CgYEAhz92fqsqN0j1JMAch949\nY2+x4731KSjez1qm9OPV0a46qSOmtOuFrj2R0WWpp745Fg2iM/sUgoyYwtmw/cu1\nvKU/3HOPF2Bl3rFXnx3mJAUrtf6RjMwHc2KptkKoAuIJi9JKUH4SLNUcFisLlGsd\nFodnfIaI4ohdIcwHRnsB9aQ=\n-----END PRIVATE KEY-----\n",
+  "client_email": "fashion-app@deploy-api-phyton.iam.gserviceaccount.com",
+  "client_id": "115696781461351091005",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/fashion-app%40deploy-api-phyton.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

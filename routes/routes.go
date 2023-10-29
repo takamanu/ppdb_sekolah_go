@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+	"ppdb_sekolah_go/configs"
 	"ppdb_sekolah_go/constans"
 	"ppdb_sekolah_go/controllers"
 	m "ppdb_sekolah_go/middlewares"
@@ -15,7 +17,7 @@ func New() *echo.Echo {
 
 	e.GET("/datapokok", controllers.GetDatapokokController)
 	e.GET("/datapokok/:id", controllers.GetDatapokokControllerByID)
-	e.POST("/datapokok", controllers.CreateDatapokokController)
+	e.POST("/datapokok", CreateDatapokokHandler)
 	e.DELETE("/datapokok/:id", controllers.DeleteDatapokokController)
 	e.PUT("/datapokok/:id", controllers.UpdateDatapokokController)
 
@@ -44,4 +46,14 @@ func New() *echo.Echo {
 	e.PUT("/users/:id", controllers.UpdateUserController)
 
 	return e
+}
+
+func CreateDatapokokHandler(c echo.Context) error {
+	client, bucketName, err := configs.InitGCB()
+	if err != nil {
+		// Handle the error, e.g., return an internal server error
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to initialize Google Cloud Storage")
+	}
+
+	return controllers.CreateDatapokokController(c, client, bucketName)
 }

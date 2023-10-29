@@ -1,12 +1,16 @@
 package controllers
 
 import (
+	"context"
+	"io"
 	loger "log"
 	"net/http"
 	"ppdb_sekolah_go/configs"
 	"ppdb_sekolah_go/models"
 	"strconv"
 
+	"cloud.google.com/go/storage"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 )
@@ -50,7 +54,7 @@ func GetDatapokokControllerByID(c echo.Context) error {
 	})
 }
 
-func CreateDatapokokController(c echo.Context) error {
+func CreateDatapokokController(c echo.Context, client *storage.Client, bucketName string) error {
 	// Create a request structure that includes Datapokok and Nilai data
 	requestData := struct {
 		Datapokok models.Datapokok `json:"datapokok"`
@@ -68,6 +72,35 @@ func CreateDatapokokController(c echo.Context) error {
 		log.Errorf("Failed to create datapokok: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	// Handle file upload
+	image, err := c.FormFile("fashion_url_image")
+	if err != nil {
+		log.Errorf("Failed to get the image file: %s", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Image upload failed")
+	}
+
+	// Generate a unique filename using a UUID
+	uniqueFilename := uuid.NewString()
+
+	// Upload the image to the existing Google Cloud Storage bucket
+	ctx := context.Background()
+	wc := client.Bucket(bucketName).Object(uniqueFilename).NewWriter(ctx)
+	defer wc.Close()
+
+	src, err := image.Open()
+	if err != nil {
+		log.Errorf("Failed to open the image file: %s", err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process image")
+	}
+	defer src.Close()
+
+	if _, err = io.Copy(wc, src); err != nil {
+		log.Errorf("Failed to copy the image to the bucket: %s", err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to upload image")
+	}
+
+	requestData.Datapokok.PasFoto = "https://storage.googleapis.com/" + bucketName + "/" + uniqueFilename
 
 	// Now requestData.Datapokok.ID contains the ID of the newly created Datapokok record
 	loger.Println("Created Datapokok with ID:", requestData.Datapokok.ID)

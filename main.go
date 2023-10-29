@@ -7,6 +7,7 @@ import (
 
 func main() {
 	configs.InitDB()
+	configs.InitGCB()
 
 	e := routes.New()
 
