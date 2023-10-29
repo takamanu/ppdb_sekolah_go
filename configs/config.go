@@ -51,7 +51,7 @@ func InitGCB() (*storage.Client, string, error) {
 		}
 		fmt.Printf("Bucket %v created.\n", bucketName)
 	} else {
-		fmt.Printf("Using this existing bucket: %v\n", bucketName)
+		fmt.Printf("Using this test existing bucket: %v\n", bucketName)
 	}
 
 	return client, bucketName, nil
