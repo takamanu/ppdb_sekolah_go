@@ -71,4 +71,30 @@ func InitDB() {
 	DB.AutoMigrate(&models.Datapokok{})
 	DB.AutoMigrate(&models.Config{})
 
+	var existingConfig models.Config
+	if result := DB.First(&existingConfig, 1); result.Error == gorm.ErrRecordNotFound {
+		// Record with ID = 1 doesn't exist, so create it
+		config := models.Config{
+			ID:         1,
+			Pengumuman: true,
+			RedirectWA: "https://example.com/whatsapp",
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+		}
+
+		// Insert the sample data into the database
+		result := DB.Create(&config)
+		if result.Error != nil {
+			fmt.Println(result.Error)
+			return
+		}
+
+		fmt.Println("Seeder executed successfully.")
+	} else if result.Error != nil {
+		// Handle the error if there was a problem fetching the existing record
+		fmt.Println(result.Error)
+	} else {
+		fmt.Println("Record with ID = 1 already exists, no need to seed.")
+	}
+
 }
