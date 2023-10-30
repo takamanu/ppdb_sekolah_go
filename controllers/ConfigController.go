@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"ppdb_sekolah_go/configs"
+	"ppdb_sekolah_go/constans"
 	"ppdb_sekolah_go/models"
 
 	loger "log"
@@ -19,8 +20,9 @@ func GetConfigController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success",
-		"users":   users,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success",
+		constans.DATA:    users,
 	})
 }
 
@@ -36,8 +38,9 @@ func GetConfigControllerByID(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success",
-		"user":    user,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success",
+		constans.DATA:    user,
 	})
 }
 
@@ -56,8 +59,9 @@ func CreateConfigController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success create new config",
-		"user":    user,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success create new config",
+		constans.DATA:    user,
 	})
 }
 
@@ -69,7 +73,7 @@ func DeleteConfigController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid id")
 	}
 
-	var user models.Datapokok
+	var user models.Config
 	if err := configs.DB.First(&user, id).Error; err != nil {
 		log.Errorf("Failed to get config with id %d: %v", id, err)
 		return echo.NewHTTPError(http.StatusNotFound, "Config not found")
@@ -81,7 +85,8 @@ func DeleteConfigController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success deleted config",
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success deleted config",
 	})
 }
 
@@ -94,7 +99,7 @@ func UpdateConfigController(c echo.Context) error {
 	}
 
 	// get user by id
-	var user models.Datapokok
+	var user models.Config
 	if err := configs.DB.First(&user, userId).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Config not found")
 	}
@@ -110,7 +115,8 @@ func UpdateConfigController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "success updated",
-		"user":    user,
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success updated",
+		constans.DATA:    user,
 	})
 }
