@@ -164,7 +164,8 @@ func LoginUserController(c echo.Context) error {
 
 	fmt.Println("pass :", c.FormValue("password"))
 
-	token, err := m.CreateToken(int(user.ID), user.Name)
+	token, err := m.CreateToken(int(user.ID), user.Name, int(user.Role))
+	fmt.Printf("UserID: %v, UserName: %v, UserRole: %v", user.ID, user.Name, user.Role)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -173,7 +174,7 @@ func LoginUserController(c echo.Context) error {
 			constans.ERROR:   err.Error(),
 		})
 	}
-	userResponse := models.UserResponse{user.ID, user.Name, user.Email, token}
+	userResponse := models.UserResponse{user.ID, user.Name, user.Email, user.Role, token}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,

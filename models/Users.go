@@ -15,5 +15,6 @@ type UserResponse struct {
 	ID    uint   `json:"id" form:"name"`
 	Name  string `json:"name" form:"name"`
 	Email string `json:"email"  form:"email"`
+	Role  uint   `json:"role"  form:"role"`
 	Token string `json:"token" form:"token"`
 }
