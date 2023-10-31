@@ -50,7 +50,7 @@ func GetDatapokokControllerByID(c echo.Context) error {
 
 	var nilai models.Nilai
 	if err := configs.DB.Where("datapokok_id = ?", id).First(&nilai).Error; err != nil {
-		log.Errorf("Failed to get nilai with datapokok_id %d: %s", id, err.Error())
+		log.Errorf("Failed to gett nilai with datapokok_id %d: %s", id, err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
