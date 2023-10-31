@@ -223,44 +223,71 @@ func UpdateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 		return echo.NewHTTPError(http.StatusBadRequest, "Datapokok not found")
 	}
 
-	userIDDatapokokStr := c.FormValue("user_id")
-	userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
-	if err != nil {
-		log.Errorf("Failed to convert user_id to a uint: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user_id")
+	if c.FormValue("user_id") != "" {
+		userIDDatapokokStr := c.FormValue("user_id")
+		userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
+		if err != nil {
+			log.Errorf("Failed to convert user_id to a uint: %s", err.Error())
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid user_id")
+		}
+
+		user.UserID = uint64(userIDDatapokok)
 	}
 
-	user.UserID = uint64(userIDDatapokok)
-	user.Email = c.FormValue("email")
-	user.NamaLengkap = c.FormValue("nama_lengkap")
-	user.NISN = c.FormValue("nisn")
-	user.JenisKelamin = c.FormValue("jenis_kelamin")
-	user.TempatLahir = c.FormValue("tempat_lahir")
-
-	if IsEmailRegisteredDatapokok(c.FormValue("email")) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Email address is already registered")
+	if c.FormValue("email") != "" {
+		user.Email = c.FormValue("email")
+		if !isEmailValid(user.Email) {
+			return errors.New("invalid email address")
+		}
 	}
 
-	if IsNISNRegisteredDatapokok(c.FormValue("nisn")) {
-		return echo.NewHTTPError(http.StatusBadRequest, "NISN is already registered")
+	if c.FormValue("nama_lengkap") != "" {
+		user.NamaLengkap = c.FormValue("nama_lengkap")
 	}
 
+	if c.FormValue("nisn") != "" {
+		user.NISN = c.FormValue("nisn")
+	}
+
+	if c.FormValue("jenis_kelamin") != "" {
+		user.JenisKelamin = c.FormValue("jenis_kelamin")
+	}
+
+	if c.FormValue("tempat_lahir") != "" {
+		user.TempatLahir = c.FormValue("tempat_lahir")
+	}
+
+	if c.FormValue("tanggal_lahir") != "" {
+		dobStr := c.FormValue("tanggal_lahir")
+		dob, err := time.Parse("2006-01-02", dobStr)
+		if err == nil {
+			user.TanggalLahir = &dob
+		}
+	}
 	// Date of birth handling
-	dobStr := c.FormValue("tanggal_lahir")
-	dob, err := time.Parse("2006-01-02", dobStr)
-	if err == nil {
-		user.TanggalLahir = &dob
+
+	if c.FormValue("asal_sekolah") != "" {
+		user.AsalSekolah = c.FormValue("asal_sekolah")
 	}
 
-	user.AsalSekolah = c.FormValue("asal_sekolah")
-	user.NamaAyah = c.FormValue("nama_ayah")
-	user.NoWaAyah = c.FormValue("no_wa_ayah")
-	user.NamaIbu = c.FormValue("nama_ibu")
-	user.NoWaIbu = c.FormValue("no_wa_ibu")
-	user.Jurusan = c.FormValue("jurusan")
+	if c.FormValue("nama_ayah") != "" {
+		user.NamaAyah = c.FormValue("nama_ayah")
+	}
 
-	if err := ValidateDatapokokFields(user); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	if c.FormValue("no_wa_ayah") != "" {
+		user.NoWaAyah = c.FormValue("no_wa_ayah")
+	}
+
+	if c.FormValue("nama_ibu") != "" {
+		user.NamaIbu = c.FormValue("nama_ibu")
+	}
+
+	if c.FormValue("no_wa_ibu") != "" {
+		user.NoWaIbu = c.FormValue("no_wa_ibu")
+	}
+
+	if c.FormValue("jurusan") != "" {
+		user.Jurusan = c.FormValue("jurusan")
 	}
 
 	// // Create the Datapokok record in the database
