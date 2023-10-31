@@ -37,7 +37,14 @@ jobs:
         run: |
             export IMAGE_TAG=$(git rev-parse --short ${{github.sha}})
             export IMAGE_NAME=asia-southeast1-docker.pkg.dev/deploy-api-phyton/ppdb/ppdb_sekolah:${IMAGE_TAG}
-            docker build -t ${IMAGE_NAME} .
+            docker build --build-arg DB_USERNAME=$DB_USERNAME \
+                         --build-arg DB_PASSWORD=$DB_PASSWORD \
+                         --build-arg DB_DATABASE=$DB_DATABASE \
+                         --build-arg API_KEY=$API_KEY \
+                         --build-arg DB_HOST=$DB_HOST \
+                         --build-arg DB_HOST=$DB_PORT \
+                         --build-arg NODE_ENV=$APP_PORT \
+                         -t ${IMAGE_NAME} .
             docker push ${IMAGE_NAME}
       - name: Deploy to Cloud Run
         run: |
