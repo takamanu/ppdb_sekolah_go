@@ -408,9 +408,9 @@ func ValidateDatapokokFields(datapokok models.Datapokok) error {
 		return errors.New("invalid email address")
 	}
 	// Validate pasfoto
-	if !isPasfotoValid(datapokok.PasFoto) {
-		return errors.New("pasfoto must be an image file")
-	}
+	// if !isPasfotoValid(datapokok.PasFoto) {
+	// 	return errors.New("pasfoto must be an image file")
+	// }
 
 	if datapokok.AsalSekolah == "" {
 		return errors.New("Asal sekolah is required")
@@ -477,5 +477,5 @@ func isPasfotoValid(pasfoto string) bool {
 	mimetype := http.DetectContentType(buffer)
 
 	// A valid pasfoto must be an image file of type png, jpeg, or gif
-	return mimetype == "image/png" || mimetype == "image/jpeg" || mimetype == "image/gif"
+	return mimetype == "image/png" || mimetype == "image/jpg" || mimetype == "image/jpeg" || mimetype == "image/gif"
 }
