@@ -78,10 +78,6 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 
 	}
 
-	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
 	userIDDatapokokStr := c.FormValue("user_id")
 	userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
 	if err != nil {
@@ -117,6 +113,10 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	requestData.Datapokok.NoWaAyah = c.FormValue("no_wa_ayah")
 	requestData.Datapokok.NamaIbu = c.FormValue("nama_ibu")
 	requestData.Datapokok.NoWaIbu = c.FormValue("no_wa_ibu")
+
+	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
 	// Create the Datapokok record in the database
 	if err := configs.DB.Create(&requestData.Datapokok).Error; err != nil {
@@ -286,10 +286,6 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 
 	}
 
-	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
 	userIDDatapokokStr := c.FormValue("user_id")
 	userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
 	if err != nil {
@@ -325,6 +321,10 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 	requestData.Datapokok.NoWaAyah = c.FormValue("no_wa_ayah")
 	requestData.Datapokok.NamaIbu = c.FormValue("nama_ibu")
 	requestData.Datapokok.NoWaIbu = c.FormValue("no_wa_ibu")
+
+	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 
 	// Create the Datapokok record in the database
 	if err := configs.DB.Create(&requestData.Datapokok).Error; err != nil {
