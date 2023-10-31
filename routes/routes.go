@@ -24,6 +24,7 @@ func New() *echo.Echo {
 
 	eSiswa := e.Group("/siswa")
 	eSiswa.Use(mid.JWT([]byte(constans.SECRET_JWT)))
+	eSiswa.Use(m.AuthMiddleware)
 	eSiswa.POST("/datapokok", CreateDatapokokHandlerSiswa)
 	eSiswa.GET("/datapokok", controllers.GetDatapokokControllerSiswa)
 	eSiswa.POST("/jurusan", controllers.AIController)
@@ -52,7 +53,7 @@ func New() *echo.Echo {
 	eAdmin.GET("/datapokok/:id", controllers.GetDatapokokControllerByID)
 	eAdmin.POST("/datapokok", CreateDatapokokHandler)
 	eAdmin.DELETE("/datapokok/:id", controllers.DeleteDatapokokController)
-	eAdmin.PUT("/datapokok/:id", controllers.UpdateDatapokokController)
+	eAdmin.PUT("/datapokok/:id", UpdateDatapokokHandler)
 
 	eAdmin.GET("/config", controllers.GetConfigController)
 	eAdmin.GET("/config/:id", controllers.GetConfigControllerByID)
@@ -81,4 +82,14 @@ func CreateDatapokokHandlerSiswa(c echo.Context) error {
 	}
 
 	return controllers.CreateDatapokokControllerSiswa(c, client, bucketName)
+}
+
+func UpdateDatapokokHandler(c echo.Context) error {
+	client, bucketName, err := configs.InitGCB()
+	if err != nil {
+		// Handle the error, e.g., return an internal server error
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to initialize Google Cloud Storage")
+	}
+
+	return controllers.UpdateDatapokokController(c, client, bucketName)
 }

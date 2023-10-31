@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"ppdb_sekolah_go/constans"
 	"ppdb_sekolah_go/models"
 	"time"
 
@@ -59,7 +60,7 @@ func InitGCB() (*storage.Client, string, error) {
 
 func InitDB() {
 
-	dsn := "root:P-8VA^=pL2dX`D8=@tcp(35.240.201.186:3306)/ppdb_smp?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", constans.DB_USERNAME, constans.DB_PASSWORD, constans.DB_HOST, constans.DB_PORT, constans.DB_DATABASE)
 	var err error
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
