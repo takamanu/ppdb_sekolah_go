@@ -2,13 +2,16 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	loger "log"
 	"net/http"
+	"os"
 	"ppdb_sekolah_go/configs"
 	"ppdb_sekolah_go/constans"
 	"ppdb_sekolah_go/models"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -62,6 +65,7 @@ func GetDatapokokControllerByID(c echo.Context) error {
 
 func CreateDatapokokController(c echo.Context, client *storage.Client, bucketName string) error {
 	// Create a request structure that includes Datapokok and Nilai data
+
 	requestData := struct {
 		Datapokok models.Datapokok `json:"datapokok"`
 		Nilai     models.Nilai     `json:"nilai"`
@@ -72,6 +76,10 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 		log.Errorf("Failed to bind request: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 
+	}
+
+	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	userIDDatapokokStr := c.FormValue("user_id")
@@ -278,6 +286,10 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 
 	}
 
+	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
 	userIDDatapokokStr := c.FormValue("user_id")
 	userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
 	if err != nil {
@@ -392,4 +404,82 @@ func IsNISNRegisteredDatapokok(nisn string) bool {
 		return false
 	}
 	return true
+}
+
+func ValidateDatapokokFields(datapokok models.Datapokok) error {
+	// Validate email
+	if !isEmailValid(datapokok.Email) {
+		return errors.New("invalid email address")
+	}
+	// Validate pasfoto
+	if !isPasfotoValid(datapokok.PasFoto) {
+		return errors.New("pasfoto must be an image file")
+	}
+
+	if datapokok.AsalSekolah == "" {
+		return errors.New("Asal sekolah is required")
+	}
+
+	if datapokok.JenisKelamin == "" {
+		return errors.New("Gender is required")
+	}
+	if datapokok.NISN == "" {
+		return errors.New("NISN is required")
+	}
+	if datapokok.NamaAyah == "" {
+		return errors.New("Nama ayah is required")
+	}
+	if datapokok.NamaIbu == "" {
+		return errors.New("Nama ibu is required")
+	}
+	if datapokok.NamaLengkap == "" {
+		return errors.New("Nama Lengkap is required")
+	}
+	if datapokok.NoWaAyah == "" {
+		return errors.New("No WA Ayah is required")
+	}
+	if datapokok.NoWaIbu == "" {
+		return errors.New("No WA Ibu is required")
+	}
+
+	if datapokok.TempatLahir == "" {
+		return errors.New("Tempat Lahir is required")
+	}
+
+	if datapokok.TanggalLahir == nil {
+		return errors.New("Tanggal lahir is required")
+	}
+
+	// Validate jurusan
+	if datapokok.Jurusan == "" {
+		return errors.New("jurusan is required")
+	}
+
+	return nil
+}
+
+func isEmailValid(email string) bool {
+	// Use a regular expression to validate the email address
+	re := regexp.MustCompile(`^[a-zA-Z0-9.!#$%&'*+/=?^_{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$`)
+	return re.MatchString(email)
+}
+
+func isPasfotoValid(pasfoto string) bool {
+	// Check if the pasfoto is an image file
+	file, err := os.Open(pasfoto)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	// Determine the MIME type of the file
+	buffer := make([]byte, 512) // Read the first 512 bytes to detect the MIME type
+	_, err = file.Read(buffer)
+	if err != nil {
+		return false
+	}
+	mimetype := http.DetectContentType(buffer)
+
+	// A valid pasfoto must be an image file of type png, jpeg, or gif
+	return mimetype == "image/png" || mimetype == "image/jpeg" || mimetype == "image/gif"
 }

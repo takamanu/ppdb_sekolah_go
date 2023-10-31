@@ -12,6 +12,11 @@ import (
 
 func AIController(c echo.Context) error {
 	query := c.QueryParam("tanya")
+	// is_like_logic := c.QueryParam("is_like_logic")
+	// is_like_hafalan := c.QueryParam("is_like_hafalan")
+	// is_like_bahasa := c.QueryParam("is_like_bahasa")
+	// is_like_matematika := c.QueryParam("is_like_matematika")
+	// is_like_ekonomi := c.QueryParam("is_like_ekonomi")
 	client := openai.NewClient("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")
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
@@ -34,7 +39,7 @@ func AIController(c echo.Context) error {
 	// Add the global variable to the response map
 	responseMap := map[string]interface{}{
 		constans.SUCCESS: true,
-		constans.MESSAGE: "Success get all users",
+		constans.MESSAGE: "Success get AI recommendation",
 		constans.DATA:    resp.Choices[0].Message.Content,
 	}
 

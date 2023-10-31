@@ -17,6 +17,7 @@ type Datapokok struct {
 	NoWaAyah     string     `gorm:"required;column:no_wa_ayah" json:"no_wa_ayah"`
 	NamaIbu      string     `gorm:"required;column:nama_ibu" json:"nama_ibu"`
 	NoWaIbu      string     `gorm:"required;column:no_wa_ibu" json:"no_wa_ibu"`
+	Jurusan      string     `gorm:"required;column:jurusan" json:"jurusan"`
 	CreatedAt    *time.Time `gorm:"column:created_at" json:"created_at"`
 	UpdatedAt    *time.Time `gorm:"column:updated_at" json:"updated_at"`
 	Nilai        []Nilai    `json:"nilai"  form:"nilai"`
