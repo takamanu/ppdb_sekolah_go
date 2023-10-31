@@ -10,6 +10,8 @@ func AdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		role := c.Get("role")
 
+		fmt.Println("Testing")
+
 		// Convert the `role` variable to type `float64`.
 		roleFloat := role.(float64)
 
