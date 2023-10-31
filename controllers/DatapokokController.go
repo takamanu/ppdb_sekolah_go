@@ -271,7 +271,7 @@ func GetDatapokokControllerSiswa(c echo.Context) error {
 
 func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, bucketName string) error {
 
-	userId, ok := c.Get("userId").(uint64)
+	userId, ok := c.Get("userId").(float64)
 	if !ok {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID")
 	}
@@ -289,7 +289,7 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 
 	}
 
-	requestData.Datapokok.UserID = userId
+	requestData.Datapokok.UserID = uint64(userId)
 
 	requestData.Datapokok.Email = c.FormValue("email")
 	requestData.Datapokok.NamaLengkap = c.FormValue("nama_lengkap")
