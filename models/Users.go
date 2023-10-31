@@ -4,10 +4,10 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Name      string      `json:"name" form:"name"`
-	Email     string      `gorm:"uniqueIndex" json:"email"  form:"email"`
-	Password  string      `json:"password" form:"password"`
-	Role      uint        `json:"role"  form:"role"`
+	Name      string      `gorm:"required" json:"name" form:"name"`
+	Email     string      `gorm:"required, unique" json:"email"  form:"email"`
+	Password  string      `gorm:"required" json:"password" form:"password"`
+	Role      uint        `gorm:"default:0" json:"role"  form:"role"`
 	Datapokok []Datapokok `json:"datapokok"  form:"datapokok"`
 }
 
