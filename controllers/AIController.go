@@ -32,7 +32,7 @@ func AIController(c echo.Context) error {
 	)
 
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		fmt.Printf("ChatCompletion test error: %v\n", err)
 		return err
 	}
 
