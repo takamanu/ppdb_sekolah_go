@@ -7,4 +7,4 @@ const DATA string = "data"
 const MESSAGE string = "message"
 const ERROR string = "error"
 
-const API_KEY string = "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"
+const API_KEY string = "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"

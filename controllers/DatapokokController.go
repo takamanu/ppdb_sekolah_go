@@ -270,8 +270,11 @@ func GetDatapokokControllerSiswa(c echo.Context) error {
 }
 
 func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, bucketName string) error {
-	userId := c.Get("userId")
-	fmt.Println("This is the id from jwt: ", userId)
+
+	userId, ok := c.Get("userId").(uint64)
+	if !ok {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID")
+	}
 
 	// Create a request structure that includes Datapokok and Nilai data
 	requestData := struct {
@@ -286,14 +289,7 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 
 	}
 
-	userIDDatapokokStr := c.FormValue("user_id")
-	userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
-	if err != nil {
-		log.Errorf("Failed to convert user_id to a uint: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user_id")
-	}
-
-	requestData.Datapokok.UserID = uint64(userIDDatapokok)
+	requestData.Datapokok.UserID = userId
 
 	requestData.Datapokok.Email = c.FormValue("email")
 	requestData.Datapokok.NamaLengkap = c.FormValue("nama_lengkap")
