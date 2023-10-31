@@ -24,11 +24,32 @@ func GetUsersController(c echo.Context) error {
 		log.Errorf("Failed to get users: %s", err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	// Fetch associated datapokok and nilai data for each user
+	for i := range users {
+		var datapokok []models.Datapokok
+		if err := configs.DB.Where("user_id = ?", users[i].ID).Find(&datapokok).Error; err != nil {
+			log.Errorf("Failed to get datapokok for user with id %d: %s", users[i].ID, err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		// Fetch associated nilai data for each datapokok
+		for j := range datapokok {
+			var nilai []models.Nilai
+			if err := configs.DB.Where("datapokok_id = ?", datapokok[j].ID).Find(&nilai).Error; err != nil {
+				log.Errorf("Failed to get nilai for datapokok with id %d: %s", datapokok[j].ID, err.Error())
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+			datapokok[j].Nilai = nilai
+		}
+
+		users[i].Datapokok = datapokok
+	}
+
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
 		constans.MESSAGE: "Success get all users",
 		constans.DATA:    users,
-		//USAGE OF THE GLOBAL VARIABLE
 	})
 }
 
@@ -38,6 +59,7 @@ func GetUserController(c echo.Context) error {
 		log.Errorf("Invalid id: %s", c.Param("id"))
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid id")
 	}
+
 	var user models.User
 	if err := configs.DB.First(&user, id).Error; err != nil {
 		log.Errorf("Failed to get user with id %d: %s", id, err.Error())
@@ -50,32 +72,18 @@ func GetUserController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	var user_datapokok models.Datapokok
-	if err := configs.DB.Where("user_id = ?", user.ID).First(&user_datapokok).Error; err != nil {
-		log.Errorf("Failed to get user with id %d: %s", id, err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	// Fetch associated nilai data for each datapokok
+	for i := range datapokok {
+		var nilai []models.Nilai
+		if err := configs.DB.Where("datapokok_id = ?", datapokok[i].ID).Find(&nilai).Error; err != nil {
+			log.Errorf("Failed to get nilai for datapokok with id %d: %s", datapokok[i].ID, err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		datapokok[i].Nilai = nilai
 	}
 
-	// datapokokId = datapokok.
-
-	// Fetch associated user_vouchers data
-	var nilai []models.Nilai
-	if err := configs.DB.Where("datapokok_id = ?", user_datapokok.ID).Find(&nilai).Error; err != nil {
-		log.Errorf("Failed to get nilai for user with id %d: %s", user.ID, err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	// Set fashion and user_vouchers to empty arrays if they are not found
-	if len(datapokok) == 0 {
-		datapokok = []models.Datapokok{}
-	}
-	if len(nilai) == 0 {
-		nilai = []models.Nilai{}
-	}
-
-	// Set the user's fashion and user_vouchers
+	// Set the user's datapokok
 	user.Datapokok = datapokok
-	user_datapokok.Nilai = nilai
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
