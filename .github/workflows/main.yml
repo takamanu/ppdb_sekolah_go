@@ -42,7 +42,7 @@ jobs:
                          --build-arg DB_DATABASE=$DB_DATABASE \
                          --build-arg API_KEY=$API_KEY \
                          --build-arg DB_HOST=$DB_HOST \
-                         --build-arg DB_HOST=$DB_PORT \
+                         --build-arg DB_PORT=$DB_PORT \
                          --build-arg APP_PORT=$APP_PORT \
                          -t ${IMAGE_NAME} .
             docker push ${IMAGE_NAME}
