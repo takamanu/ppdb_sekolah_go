@@ -43,6 +43,42 @@ func GetUserController(c echo.Context) error {
 		log.Errorf("Failed to get user with id %d: %s", id, err.Error())
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	var datapokok models.Datapokok
+	if err := configs.DB.Where("user_id = ?", user.ID).First(&datapokok).Error; err != nil {
+		// If the datapokok doesn't exist, just delete the user
+		if err == gorm.ErrRecordNotFound {
+			if err := configs.DB.Find(&user).Error; err != nil {
+				user.Datapokok = nil
+			}
+
+			user.Datapokok = append(user.Datapokok, datapokok)
+		}
+
+		// If there's another error, return it
+		return err
+	}
+
+	// Check if the nilai exists
+	var nilai models.Nilai
+	if err := configs.DB.Where("datapokok_id = ?", datapokok.ID).First(&nilai).Error; err != nil {
+		// If the nilai doesn't exist, delete the datapokok and user
+		if err == gorm.ErrRecordNotFound {
+			if err := configs.DB.Find(&datapokok).Error; err != nil {
+				user.Datapokok = nil
+			}
+
+			if err := configs.DB.Find(&user).Error; err != nil {
+				datapokok.Nilai = nil
+			}
+
+			datapokok.Nilai = append(datapokok.Nilai, nilai)
+
+		}
+
+		// If there's another error, return it
+		return err
+	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
 		constans.MESSAGE: "Success get user by id",
