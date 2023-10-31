@@ -30,7 +30,7 @@ func InitGCB() (*storage.Client, string, error) {
 	// Creates a client.
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		log.Fatalf("Failed to test create client: %v", err)
 		return nil, "", err
 	}
 
