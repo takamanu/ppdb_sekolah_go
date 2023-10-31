@@ -209,28 +209,115 @@ func DeleteDatapokokController(c echo.Context) error {
 }
 
 // update user by id
-func UpdateDatapokokController(c echo.Context) error {
+func UpdateDatapokokController(c echo.Context, client *storage.Client, bucketName string) error {
+	// get user id from url param
 	// get user id from url param
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid datapokok id")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid datapokok id")
 	}
 
 	// get user by id
 	var user models.Datapokok
 	if err := configs.DB.First(&user, userId).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "datapokok not found")
+		return echo.NewHTTPError(http.StatusBadRequest, "Datapokok not found")
 	}
 
-	// bind request body to user struct
-	if err := c.Bind(&user); err != nil {
+	userIDDatapokokStr := c.FormValue("user_id")
+	userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
+	if err != nil {
+		log.Errorf("Failed to convert user_id to a uint: %s", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user_id")
+	}
+
+	user.UserID = uint64(userIDDatapokok)
+	user.Email = c.FormValue("email")
+	user.NamaLengkap = c.FormValue("nama_lengkap")
+	user.NISN = c.FormValue("nisn")
+	user.JenisKelamin = c.FormValue("jenis_kelamin")
+	user.TempatLahir = c.FormValue("tempat_lahir")
+
+	if IsEmailRegisteredDatapokok(c.FormValue("email")) {
+		return echo.NewHTTPError(http.StatusBadRequest, "Email address is already registered")
+	}
+
+	if IsNISNRegisteredDatapokok(c.FormValue("nisn")) {
+		return echo.NewHTTPError(http.StatusBadRequest, "NISN is already registered")
+	}
+
+	// Date of birth handling
+	dobStr := c.FormValue("tanggal_lahir")
+	dob, err := time.Parse("2006-01-02", dobStr)
+	if err == nil {
+		user.TanggalLahir = &dob
+	}
+
+	user.AsalSekolah = c.FormValue("asal_sekolah")
+	user.NamaAyah = c.FormValue("nama_ayah")
+	user.NoWaAyah = c.FormValue("no_wa_ayah")
+	user.NamaIbu = c.FormValue("nama_ibu")
+	user.NoWaIbu = c.FormValue("no_wa_ibu")
+	user.Jurusan = c.FormValue("jurusan")
+
+	if err := ValidateDatapokokFields(user); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	// save user to database
+	// // Create the Datapokok record in the database
+	// if err := configs.DB.Create(&requestData.Datapokok).Error; err != nil {
+	// 	log.Errorf("Failed to create datapokok: %s", err.Error())
+	// 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	// }
+
+	// Handle file upload
+	image, err := c.FormFile("pas_foto")
+	if err != nil {
+		log.Errorf("Failed to get the image file: %s", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Image upload failed")
+	}
+
+	// Generate a unique filename using a UUID
+	uniqueFilename := uuid.NewString()
+
+	// Upload the image to the existing Google Cloud Storage bucket
+	ctx := context.Background()
+	wc := client.Bucket(bucketName).Object(uniqueFilename).NewWriter(ctx)
+	defer wc.Close()
+
+	src, err := image.Open()
+	if err != nil {
+		log.Errorf("Failed to open the image file: %s", err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process image")
+	}
+	defer src.Close()
+
+	if _, err = io.Copy(wc, src); err != nil {
+		log.Errorf("Failed to copy the image to the bucket: %s", err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to upload image")
+	}
+
+	user.PasFoto = "https://storage.googleapis.com/" + bucketName + "/" + uniqueFilename
+
+	if c.Request().Method == "PUT" && user.Nilai != nil {
+		return echo.NewHTTPError(http.StatusForbidden, "You cant update user nilai")
+	}
+
+	// // validate user fields
+	// if err := ValidateDatapokokFields(user); err != nil {
+	// 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	// }
+
+	// update user to database
 	if err := configs.DB.Save(&user).Error; err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	var nilai models.Nilai
+	if err := configs.DB.Where("datapokok_id = ?", user.ID).First(&nilai).Error; err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Datapokok not found")
+	}
+
+	user.Nilai = append(user.Nilai, nilai)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
