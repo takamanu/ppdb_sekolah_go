@@ -5,10 +5,10 @@ import "time"
 type Datapokok struct {
 	ID           uint64     `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
 	UserID       uint64     `gorm:"column:user_id" json:"user_id"`
-	Email        string     `gorm:"column:email" json:"email"`
+	Email        string     `gorm:"uniqueIndex;column:email" json:"email"`
 	PasFoto      string     `gorm:"column:pas_foto" json:"pas_foto"`
 	NamaLengkap  string     `gorm:"column:nama_lengkap" json:"nama_lengkap"`
-	NISN         string     `gorm:"column:nisn" json:"nisn"`
+	NISN         string     `gorm:"uniqueIndex;column:nisn" json:"nisn"`
 	JenisKelamin string     `gorm:"column:jenis_kelamin" json:"jenis_kelamin"`
 	TempatLahir  string     `gorm:"column:tempat_lahir" json:"tempat_lahir"`
 	TanggalLahir *time.Time `gorm:"column:tanggal_lahir" json:"tanggal_lahir"`
