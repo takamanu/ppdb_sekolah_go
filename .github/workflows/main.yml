@@ -23,14 +23,14 @@ jobs:
         run: |
             gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
        
-      - name: Set Environment Variables
-        run: |
-            echo "API_KEY=${{ secrets.API_KEY }}" >> $GITHUB_ENV
-            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> $GITHUB_ENV
-            echo "DB_PORT=${{ secrets.DB_PORT }}" >> $GITHUB_ENV
-            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
-            echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> $GITHUB_ENV
-            echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
+      # - name: Set Environment Variables
+      #   run: |
+      #       echo "API_KEY=${{ secrets.API_KEY }}" >> $GITHUB_ENV
+      #       echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> $GITHUB_ENV
+      #       echo "DB_PORT=${{ secrets.DB_PORT }}" >> $GITHUB_ENV
+      #       echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+      #       echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> $GITHUB_ENV
+      #       echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
         
       - name: Build and Push Docker Image 
         run: |
