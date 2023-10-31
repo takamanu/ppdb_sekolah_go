@@ -1,16 +1,30 @@
 package constans
 
-const SECRET_JWT = "123"
+import (
+	"os"
+)
 
-const SUCCESS string = "success"
-const DATA string = "data"
-const MESSAGE string = "message"
-const ERROR string = "error"
+const (
+	SECRET_JWT        = "123"
+	SUCCESS    string = "success"
+	DATA       string = "data"
+	MESSAGE    string = "message"
+	ERROR      string = "error"
+)
 
-const API_KEY string = "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"
+var API_KEY string
+var DB_USERNAME string
+var DB_PORT string
+var DB_PASSWORD string
+var DB_DATABASE string
+var DB_HOST string
 
-const DB_USERNAME = "root"
-const DB_PORT = "3306"
-const DB_PASSWORD = "P-8VA^=pL2dX`D8="
-const DB_DATABASE = "ppdb_smp"
-const DB_HOST = "35.240.201.186"
+func init() {
+
+	API_KEY = os.Getenv("API_KEY")
+	DB_USERNAME = os.Getenv("DB_USERNAME")
+	DB_PORT = os.Getenv("DB_PORT")
+	DB_PASSWORD = os.Getenv("DB_PASSWORD")
+	DB_DATABASE = os.Getenv("DB_DATABASE")
+	DB_HOST = os.Getenv("DB_HOST")
+}

@@ -23,7 +23,7 @@ type DataSources struct {
 func InitGCB() (*storage.Client, string, error) {
 	ctx := context.Background()
 
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "configs/deploy-api-phyton-c5c9b7d8a6df.json")
+	os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	// Sets your Google Cloud Platform project ID.
 	projectID := "deploy-api-phyton"
 

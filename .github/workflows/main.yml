@@ -22,25 +22,31 @@ jobs:
       - name: Configure Docker to use gcloud 
         run: |
             gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
-      # - name: Set Environment Variables
-      #   run: |
-      #       echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> $GITHUB_ENV
-      #       echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> $GITHUB_ENV
-      #       echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
-      #       echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> $GITHUB_ENV
-      #       echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
-      #       echo "DB_DIALECT=${{ secrets.DB_DIALECT }}" >> $GITHUB_ENV
-      #       echo "DB_USERNAME_PROD=${{ secrets.DB_USERNAME_PROD }}" >> $GITHUB_ENV
-      #       echo "DB_PASSWORD_PROD=${{ secrets.DB_PASSWORD_PROD }}" >> $GITHUB_ENV
-      #       echo "DB_DATABASE_PROD=${{ secrets.DB_DATABASE_PROD }}" >> $GITHUB_ENV
-      #       echo "DB_HOST_PROD=${{ secrets.DB_HOST_PROD }}" >> $GITHUB_ENV
-      #       echo "DB_DIALECT_PROD=${{ secrets.DB_DIALECT_PROD }}" >> $GITHUB_ENV
+       
+      - name: Set Environment Variables
+        run: |
+            echo "APP_PORT=${{ secrets.APP_PORT }}" >> $GITHUB_ENV
+            echo "API_KEY=${{ secrets.API_KEY }}" >> $GITHUB_ENV
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> $GITHUB_ENV
+            echo "DB_PORT=${{ secrets.DB_PORT }}" >> $GITHUB_ENV
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+            echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> $GITHUB_ENV
+            echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
+            echo "DB_HOST=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" >> $GOOGLE_APPLICATION_CREDENTIALS
         
       - name: Build and Push Docker Image 
         run: |
             export IMAGE_TAG=$(git rev-parse --short ${{github.sha}})
             export IMAGE_NAME=asia-southeast1-docker.pkg.dev/deploy-api-phyton/ppdb/ppdb_sekolah:${IMAGE_TAG}
-            docker build -t ${IMAGE_NAME} .
+            docker build --build-arg DB_USERNAME=$DB_USERNAME \
+                         --build-arg DB_PASSWORD=$DB_PASSWORD \
+                         --build-arg DB_DATABASE=$DB_DATABASE \
+                         --build-arg API_KEY=$API_KEY \
+                         --build-arg DB_HOST=$DB_HOST \
+                         --build-arg DB_PORT=$DB_PORT \
+                         --build-arg GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS \
+                         --build-arg APP_PORT=$APP_PORT \
+                         -t ${IMAGE_NAME} .
             docker push ${IMAGE_NAME}
       - name: Deploy to Cloud Run
         run: |
