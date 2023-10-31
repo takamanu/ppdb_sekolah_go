@@ -297,33 +297,31 @@ func UpdateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	// }
 
 	// Handle file upload
+
 	image, err := c.FormFile("pas_foto")
-	if err != nil {
-		log.Errorf("Failed to get the image file: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Image upload failed")
+	if err == nil {
+		// Generate a unique filename using a UUID
+		uniqueFilename := uuid.NewString()
+
+		// Upload the image to the existing Google Cloud Storage bucket
+		ctx := context.Background()
+		wc := client.Bucket(bucketName).Object(uniqueFilename).NewWriter(ctx)
+		defer wc.Close()
+
+		src, err := image.Open()
+		if err != nil {
+			log.Errorf("Failed to open the image file: %s", err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process image")
+		}
+		defer src.Close()
+
+		if _, err = io.Copy(wc, src); err != nil {
+			log.Errorf("Failed to copy the image to the bucket: %s", err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to upload image")
+		}
+
+		user.PasFoto = "https://storage.googleapis.com/" + bucketName + "/" + uniqueFilename
 	}
-
-	// Generate a unique filename using a UUID
-	uniqueFilename := uuid.NewString()
-
-	// Upload the image to the existing Google Cloud Storage bucket
-	ctx := context.Background()
-	wc := client.Bucket(bucketName).Object(uniqueFilename).NewWriter(ctx)
-	defer wc.Close()
-
-	src, err := image.Open()
-	if err != nil {
-		log.Errorf("Failed to open the image file: %s", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process image")
-	}
-	defer src.Close()
-
-	if _, err = io.Copy(wc, src); err != nil {
-		log.Errorf("Failed to copy the image to the bucket: %s", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to upload image")
-	}
-
-	user.PasFoto = "https://storage.googleapis.com/" + bucketName + "/" + uniqueFilename
 
 	if c.Request().Method == "PUT" && user.Nilai != nil {
 		return echo.NewHTTPError(http.StatusForbidden, "You cant update user nilai")
