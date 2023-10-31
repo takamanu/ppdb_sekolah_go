@@ -24,6 +24,7 @@ func New() *echo.Echo {
 
 	eSiswa := e.Group("/siswa")
 	eSiswa.Use(mid.JWT([]byte(constans.SECRET_JWT)))
+	eSiswa.Use(m.AuthMiddleware)
 	eSiswa.POST("/datapokok", CreateDatapokokHandlerSiswa)
 	eSiswa.GET("/datapokok", controllers.GetDatapokokControllerSiswa)
 	eSiswa.POST("/jurusan", controllers.AIController)

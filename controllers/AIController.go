@@ -17,7 +17,7 @@ func AIController(c echo.Context) error {
 	// is_like_bahasa := c.QueryParam("is_like_bahasa")
 	// is_like_matematika := c.QueryParam("is_like_matematika")
 	// is_like_ekonomi := c.QueryParam("is_like_ekonomi")
-	client := openai.NewClient("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")
+	client := openai.NewClient("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")
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
