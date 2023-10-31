@@ -1,16 +1,37 @@
 package constans
 
-const SECRET_JWT = "123"
+import (
+	"os"
 
-const SUCCESS string = "success"
-const DATA string = "data"
-const MESSAGE string = "message"
-const ERROR string = "error"
+	"github.com/joho/godotenv"
+)
 
-const API_KEY string = "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"
+const (
+	SECRET_JWT        = "123"
+	SUCCESS    string = "success"
+	DATA       string = "data"
+	MESSAGE    string = "message"
+	ERROR      string = "error"
+)
 
-const DB_USERNAME = "root"
-const DB_PORT = "3306"
-const DB_PASSWORD = "P-8VA^=pL2dX`D8="
-const DB_DATABASE = "ppdb_smp"
-const DB_HOST = "35.240.201.186"
+var API_KEY string
+var DB_USERNAME string
+var DB_PORT string
+var DB_PASSWORD string
+var DB_DATABASE string
+var DB_HOST string
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		// Handle error if .env file is not found
+		// You can choose to log the error or take other actions
+	}
+
+	API_KEY = os.Getenv("API_KEY")
+	DB_USERNAME = os.Getenv("DB_USERNAME")
+	DB_PORT = os.Getenv("DB_PORT")
+	DB_PASSWORD = os.Getenv("DB_PASSWORD")
+	DB_DATABASE = os.Getenv("DB_DATABASE")
+	DB_HOST = os.Getenv("DB_HOST")
+}
