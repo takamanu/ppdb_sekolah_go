@@ -44,41 +44,39 @@ func GetUserController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	var datapokok models.Datapokok
-	if err := configs.DB.Where("user_id = ?", user.ID).First(&datapokok).Error; err != nil {
-		// If the datapokok doesn't exist, just delete the user
-		if err == gorm.ErrRecordNotFound {
-			if err := configs.DB.Find(&user).Error; err != nil {
-				user.Datapokok = nil
-			}
-
-			user.Datapokok = append(user.Datapokok, datapokok)
-		}
-
-		// If there's another error, return it
-		return err
+	var datapokok []models.Datapokok
+	if err := configs.DB.Where("user_id = ?", user.ID).Find(&datapokok).Error; err != nil {
+		log.Errorf("Failed to get datapokok for user with id %d: %s", user.ID, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	// Check if the nilai exists
-	var nilai models.Nilai
-	if err := configs.DB.Where("datapokok_id = ?", datapokok.ID).First(&nilai).Error; err != nil {
-		// If the nilai doesn't exist, delete the datapokok and user
-		if err == gorm.ErrRecordNotFound {
-			if err := configs.DB.Find(&datapokok).Error; err != nil {
-				user.Datapokok = nil
-			}
-
-			if err := configs.DB.Find(&user).Error; err != nil {
-				datapokok.Nilai = nil
-			}
-
-			datapokok.Nilai = append(datapokok.Nilai, nilai)
-
-		}
-
-		// If there's another error, return it
-		return err
+	var user_datapokok models.Datapokok
+	if err := configs.DB.Where("user_id = ?", user.ID).First(&user_datapokok).Error; err != nil {
+		log.Errorf("Failed to get user with id %d: %s", id, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	// datapokokId = datapokok.
+
+	// Fetch associated user_vouchers data
+	var nilai []models.Nilai
+	if err := configs.DB.Where("datapokok_id = ?", user_datapokok.ID).Find(&nilai).Error; err != nil {
+		log.Errorf("Failed to get nilai for user with id %d: %s", user.ID, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// Set fashion and user_vouchers to empty arrays if they are not found
+	if len(datapokok) == 0 {
+		datapokok = []models.Datapokok{}
+	}
+	if len(nilai) == 0 {
+		nilai = []models.Nilai{}
+	}
+
+	// Set the user's fashion and user_vouchers
+	user.Datapokok = datapokok
+	user_datapokok.Nilai = nilai
+
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
 		constans.MESSAGE: "Success get user by id",
