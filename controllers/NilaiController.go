@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"ppdb_sekolah_go/configs"
 	"ppdb_sekolah_go/constans"
 	"ppdb_sekolah_go/models"
@@ -118,5 +119,40 @@ func UpdateNilaiController(c echo.Context) error {
 		constans.SUCCESS: true,
 		constans.MESSAGE: "success updated",
 		constans.DATA:    nilai,
+	})
+}
+
+func GetPengumumanSiswa(c echo.Context) error {
+
+	userId := c.Get("userId")
+	fmt.Println("This is the id from jwt: ", userId)
+
+	var config models.Config
+	if err := configs.DB.Where("id = ?", 1).First(&config).Error; err != nil {
+		log.Errorf("Failed to get config: %s", err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	if config.Pengumuman == false {
+		return echo.NewHTTPError(http.StatusBadRequest, "Pengumuman is closed")
+	}
+
+	var user models.Datapokok
+	if err := configs.DB.Where("user_id = ?", userId).First(&user).Error; err != nil {
+		log.Errorf("Failed to get user with user_id %d: %s", userId, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	var nilai models.Nilai
+	if err := configs.DB.Where("id = ?", user.ID).First(&nilai).Error; err != nil {
+		log.Errorf("Failed to get nilai with id %d: %s", user.ID, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		constans.SUCCESS: true,
+		constans.MESSAGE: "success",
+		constans.DATA:    nilai,
+		"redirect_wa":    config.RedirectWA,
 	})
 }
