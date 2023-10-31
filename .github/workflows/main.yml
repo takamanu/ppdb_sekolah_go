@@ -43,7 +43,7 @@ jobs:
                          --build-arg API_KEY=$API_KEY \
                          --build-arg DB_HOST=$DB_HOST \
                          --build-arg DB_HOST=$DB_PORT \
-                         --build-arg NODE_ENV=$APP_PORT \
+                         --build-arg APP_PORT=$APP_PORT \
                          -t ${IMAGE_NAME} .
             docker push ${IMAGE_NAME}
       - name: Deploy to Cloud Run
