@@ -89,6 +89,14 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	requestData.Datapokok.JenisKelamin = c.FormValue("jenis_kelamin")
 	requestData.Datapokok.TempatLahir = c.FormValue("tempat_lahir")
 
+	if IsEmailRegisteredDatapokok(requestData.Datapokok.Email) {
+		return echo.NewHTTPError(http.StatusBadRequest, "Email address is already registered")
+	}
+
+	if IsNISNRegisteredDatapokok(requestData.Datapokok.NISN) {
+		return echo.NewHTTPError(http.StatusBadRequest, "NISN is already registered")
+	}
+
 	// Date of birth handling
 	dobStr := c.FormValue("tanggal_lahir")
 	dob, err := time.Parse("2006-01-02", dobStr)
@@ -285,6 +293,14 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 	requestData.Datapokok.JenisKelamin = c.FormValue("jenis_kelamin")
 	requestData.Datapokok.TempatLahir = c.FormValue("tempat_lahir")
 
+	if IsEmailRegisteredDatapokok(requestData.Datapokok.Email) {
+		return echo.NewHTTPError(http.StatusBadRequest, "Email address is already registered")
+	}
+
+	if IsNISNRegisteredDatapokok(requestData.Datapokok.NISN) {
+		return echo.NewHTTPError(http.StatusBadRequest, "NISN is already registered")
+	}
+
 	// Date of birth handling
 	dobStr := c.FormValue("tanggal_lahir")
 	dob, err := time.Parse("2006-01-02", dobStr)
@@ -360,4 +376,20 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 		constans.MESSAGE: "Success create new Datapokok and Nilai",
 		constans.DATA:    requestData.Datapokok,
 	})
+}
+
+func IsEmailRegisteredDatapokok(email string) bool {
+	var user models.Datapokok
+	if err := configs.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		return false
+	}
+	return true
+}
+
+func IsNISNRegisteredDatapokok(nisn string) bool {
+	var user models.Datapokok
+	if err := configs.DB.Where("nisn = ?", nisn).First(&user).Error; err != nil {
+		return false
+	}
+	return true
 }

@@ -55,6 +55,10 @@ func CreateUserController(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	if IsEmailRegistered(user.Email) {
+		return echo.NewHTTPError(http.StatusBadRequest, "Email address is already registered")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to hash password")
@@ -181,4 +185,12 @@ func LoginUserController(c echo.Context) error {
 		constans.MESSAGE: "Success login",
 		constans.DATA:    userResponse,
 	})
+}
+
+func IsEmailRegistered(email string) bool {
+	var user models.User
+	if err := configs.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		return false
+	}
+	return true
 }
