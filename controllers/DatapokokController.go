@@ -113,6 +113,7 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	requestData.Datapokok.NoWaAyah = c.FormValue("no_wa_ayah")
 	requestData.Datapokok.NamaIbu = c.FormValue("nama_ibu")
 	requestData.Datapokok.NoWaIbu = c.FormValue("no_wa_ibu")
+	requestData.Datapokok.Jurusan = c.FormValue("jurusan")
 
 	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -317,6 +318,7 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 	requestData.Datapokok.NoWaAyah = c.FormValue("no_wa_ayah")
 	requestData.Datapokok.NamaIbu = c.FormValue("nama_ibu")
 	requestData.Datapokok.NoWaIbu = c.FormValue("no_wa_ibu")
+	requestData.Datapokok.Jurusan = c.FormValue("jurusan")
 
 	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
