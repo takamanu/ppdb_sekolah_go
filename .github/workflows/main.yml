@@ -32,7 +32,7 @@ jobs:
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
             echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> $GITHUB_ENV
             echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
-            echo "DB_HOST=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" >> $GOOGLE_APPLICATION_CREDENTIALS
+            echo "GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" >> $GITHUB_ENV
         
       - name: Build and Push Docker Image 
         run: |
