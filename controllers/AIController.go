@@ -12,11 +12,6 @@ import (
 
 func AIController(c echo.Context) error {
 	query := c.QueryParam("tanya")
-	// is_like_logic := c.QueryParam("is_like_logic")
-	// is_like_hafalan := c.QueryParam("is_like_hafalan")
-	// is_like_bahasa := c.QueryParam("is_like_bahasa")
-	// is_like_matematika := c.QueryParam("is_like_matematika")
-	// is_like_ekonomi := c.QueryParam("is_like_ekonomi")
 	client := openai.NewClient(constans.API_KEY)
 	resp, err := client.CreateChatCompletion(
 		context.Background(),

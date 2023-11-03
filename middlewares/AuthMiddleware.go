@@ -18,7 +18,8 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		// Check if the authorization header is valid
 		if !strings.Contains(authorizationHeader, "Bearer") {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
+			return jsonResponse(c, http.StatusUnauthorized, false, "Invalid token", nil)
+
 		}
 
 		// Extract the JWT token from the authorization header
@@ -38,7 +39,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// Check if the JWT token is valid
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+			return jsonResponse(c, http.StatusUnauthorized, false, err.Error(), nil)
 		}
 
 		// Access the claims from the token
@@ -47,7 +48,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// Check if the JWT token claims are valid
 
 		if !ok {
-			return echo.NewHTTPError(http.StatusUnauthorized, "JWT claims not found")
+			return jsonResponse(c, http.StatusUnauthorized, false, "Unauthorized", nil)
 		}
 
 		// Retrieve the userId from the claims
@@ -56,7 +57,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// Check if the userId is found in the claims
 
 		if !ok {
-			return echo.NewHTTPError(http.StatusUnauthorized, "userId not found in JWT claims")
+			return jsonResponse(c, http.StatusUnauthorized, false, "Unauthorized", nil)
 		}
 
 		role, ok := claims["role"].(float64)
@@ -64,7 +65,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// Check if the userId is found in the claims
 
 		if !ok {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Role not found in JWT claims")
+			return jsonResponse(c, http.StatusUnauthorized, false, "Unauthorized", nil)
 		}
 
 		// Set the userId in the context
@@ -75,4 +76,12 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return next(c)
 	}
+}
+
+func jsonResponse(c echo.Context, status int, success bool, message string, data interface{}) error {
+	return c.JSON(status, map[string]interface{}{
+		constans.SUCCESS: success,
+		constans.MESSAGE: message,
+		constans.DATA:    data,
+	})
 }

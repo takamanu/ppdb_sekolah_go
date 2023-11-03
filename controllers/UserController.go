@@ -19,37 +19,62 @@ import (
 )
 
 func GetUsersController(c echo.Context) error {
+	// Get the search parameter
+	search := c.QueryParam("search")
+
+	// Initialize the query variable
+	query := configs.DB
+
+	// If the search parameter is not empty, add a condition to the query
+	if search != "" {
+		query = query.Where("name LIKE ?", "%"+search+"%")
+	}
+
+	// Parse the pagination parameters
+	paginationParams := ParsePaginationParams(c)
+
+	// Prefetch the datapokok for each user
 	var users []models.User
-	if err := configs.DB.Find(&users).Error; err != nil {
-		log.Errorf("Failed to get users: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	if err := query.Preload("Datapokok").Find(&users).Error; err != nil {
+		log.Errorf("Failed to preload datapokok for users: %s", err.Error())
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: err.Error(),
+		})
 	}
 
-	// Fetch associated datapokok and nilai data for each user
+	// Get the paginated data
+	_, err := GetPaginatedData(c, query, paginationParams, &users)
+	if err != nil {
+		log.Errorf("Failed to get paginated users: %s", err.Error())
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: err.Error(),
+		})
+	}
+
 	for i := range users {
-		var datapokok []models.Datapokok
-		if err := configs.DB.Where("user_id = ?", users[i].ID).Find(&datapokok).Error; err != nil {
-			log.Errorf("Failed to get datapokok for user with id %d: %s", users[i].ID, err.Error())
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		// Prefetch the nilai field for the datapokok
+		if err := configs.DB.Preload("Nilai").Find(&users[i].Datapokok).Error; err != nil {
+			log.Errorf("Failed to preload nilai for datapokok with id:", err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				constans.SUCCESS: false,
+				constans.MESSAGE: err.Error(),
+			})
 		}
-
-		// Fetch associated nilai data for each datapokok
-		for j := range datapokok {
-			var nilai []models.Nilai
-			if err := configs.DB.Where("datapokok_id = ?", datapokok[j].ID).Find(&nilai).Error; err != nil {
-				log.Errorf("Failed to get nilai for datapokok with id %d: %s", datapokok[j].ID, err.Error())
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-			}
-			datapokok[j].Nilai = nilai
-		}
-
-		users[i].Datapokok = datapokok
 	}
 
+	// Extract the datapokok objects from the users
+	var datapokokList []models.Datapokok
+	for _, user := range users {
+		datapokokList = append(datapokokList, user.Datapokok...)
+	}
+
+	// Return the paginated users with datapokok
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
 		constans.MESSAGE: "Success get all users",
-		constans.DATA:    users,
+		constans.DATA:    datapokokList,
 	})
 }
 
@@ -57,19 +82,28 @@ func GetUserController(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Errorf("Invalid id: %s", c.Param("id"))
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid id")
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: "Invalid id",
+		})
 	}
 
 	var user models.User
 	if err := configs.DB.First(&user, id).Error; err != nil {
 		log.Errorf("Failed to get user with id %d: %s", id, err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: err.Error(),
+		})
 	}
 
 	var datapokok []models.Datapokok
 	if err := configs.DB.Where("user_id = ?", user.ID).Find(&datapokok).Error; err != nil {
 		log.Errorf("Failed to get datapokok for user with id %d: %s", user.ID, err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: err.Error(),
+		})
 	}
 
 	// Fetch associated nilai data for each datapokok
@@ -77,7 +111,10 @@ func GetUserController(c echo.Context) error {
 		var nilai []models.Nilai
 		if err := configs.DB.Where("datapokok_id = ?", datapokok[i].ID).Find(&nilai).Error; err != nil {
 			log.Errorf("Failed to get nilai for datapokok with id %d: %s", datapokok[i].ID, err.Error())
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				constans.SUCCESS: false,
+				constans.MESSAGE: err.Error(),
+			})
 		}
 		datapokok[i].Nilai = nilai
 	}
@@ -96,31 +133,48 @@ func CreateUserController(c echo.Context) error {
 	user := models.User{}
 	if err := c.Bind(&user); err != nil {
 		log.Errorf("Failed to bind request: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: err.Error(),
+		})
 	}
 
 	// Validate all required fields
 	if user.Email == "" || user.Password == "" || user.Name == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "All fields except role must be filled")
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: "All fields except role must be filled",
+		})
 	}
 
 	// Validate the email address
 	if !validateEmail(user.Email) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid email")
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: "Invalid email",
+		})
 	}
 
-	// Validate the password
 	if len(user.Password) < 8 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Password must be at least 8 characters long")
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: "Password must be at least 8 characters long",
+		})
 	}
 
 	if IsEmailRegistered(user.Email) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Email address is already registered")
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: "Email address is already registered",
+		})
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to hash password")
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: "Failed to hash password",
+		})
 	}
 
 	user.Password = string(hashedPassword)
@@ -128,7 +182,10 @@ func CreateUserController(c echo.Context) error {
 
 	if err := configs.DB.Create(&user).Error; err != nil {
 		log.Errorf("Failed to create user: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: err.Error(),
+		})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -143,13 +200,19 @@ func DeleteUserController(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Errorf("Invalid id: %s", c.Param("id"))
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid id")
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: "Invalid id",
+		})
 	}
 
 	var user models.User
 	if err := configs.DB.First(&user, id).Error; err != nil {
 		log.Errorf("Failed to get user with id %d: %v", id, err)
-		return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		return c.JSON(http.StatusNotFound, map[string]interface{}{
+			constans.SUCCESS: false,
+			constans.MESSAGE: "User not found",
+		})
 	}
 
 	// Check if the datapokok exists
@@ -159,7 +222,10 @@ func DeleteUserController(c echo.Context) error {
 		if err == gorm.ErrRecordNotFound {
 			if err := configs.DB.Delete(&user).Error; err != nil {
 				log.Errorf("Failed to delete user with id %d: %v", id, err)
-				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete user")
+				return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+					constans.SUCCESS: false,
+					constans.MESSAGE: "Failed to delete user id",
+				})
 			}
 
 			return c.JSON(http.StatusOK, map[string]interface{}{
@@ -179,12 +245,12 @@ func DeleteUserController(c echo.Context) error {
 		if err == gorm.ErrRecordNotFound {
 			if err := configs.DB.Delete(&datapokok).Error; err != nil {
 				log.Errorf("Failed to delete datapokok user with id %d: %v", id, err)
-				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete datapokok user")
+				return jsonResponse(c, http.StatusInternalServerError, false, "Failed to delete datapokok user", nil)
 			}
 
 			if err := configs.DB.Delete(&user).Error; err != nil {
 				log.Errorf("Failed to delete user with id %d: %v", id, err)
-				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete user")
+				return jsonResponse(c, http.StatusInternalServerError, false, "Failed to delete user", nil)
 			}
 
 			return c.JSON(http.StatusOK, map[string]interface{}{
@@ -200,17 +266,18 @@ func DeleteUserController(c echo.Context) error {
 	// If all three exist, delete all three
 	if err := configs.DB.Delete(&nilai).Error; err != nil {
 		log.Errorf("Failed to delete nilai user with id %d: %v", id, err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete nilai user")
+		return jsonResponse(c, http.StatusInternalServerError, false, "Failed to delete nilai user", nil)
+
 	}
 
 	if err := configs.DB.Delete(&datapokok).Error; err != nil {
 		log.Errorf("Failed to delete datapokok user with id %d: %v", id, err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete datapokok user")
+		return jsonResponse(c, http.StatusInternalServerError, false, "Failed to delete datapokok user", nil)
 	}
 
 	if err := configs.DB.Delete(&user).Error; err != nil {
 		log.Errorf("Failed to delete user with id %d: %v", id, err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete user")
+		return jsonResponse(c, http.StatusInternalServerError, false, "Failed to delete user", nil)
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -224,34 +291,36 @@ func UpdateUserController(c echo.Context) error {
 	// get user id from url param
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user id")
+		return jsonResponse(c, http.StatusBadRequest, false, "Invalid user id", nil)
 	}
 
 	// get user by id
 	var user models.User
 	if err := configs.DB.First(&user, userId).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "User not found")
+		return jsonResponse(c, http.StatusBadRequest, false, "User not found", nil)
 	}
 
 	// Validate email
 	email := c.FormValue("email")
 	if email != "" && !validateEmail(email) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid email")
+		return jsonResponse(c, http.StatusBadRequest, false, "Invalid email", nil)
 	}
 
 	// Validate password
 	newPassword := c.FormValue("password")
 	if newPassword != "" && len(newPassword) < 8 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Password must be at least 8 characters long")
+		return jsonResponse(c, http.StatusBadRequest, false, "Password must be at least 8 characters long", nil)
 	}
 
 	if IsEmailRegistered(email) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Email address is already registered")
+		return jsonResponse(c, http.StatusBadRequest, false, "Email address is already registered", nil)
+
 	}
 
 	// bind request body to user struct
 	if err := c.Bind(&user); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusInternalServerError, false, err.Error(), nil)
+
 	}
 
 	// update password if new password is provided
@@ -259,14 +328,16 @@ func UpdateUserController(c echo.Context) error {
 		// encrypt new password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to encrypt password")
+			// return jsonResponse(c, http.StatusInternalServerError, false, "Failed to encrypt password")
+			return jsonResponse(c, http.StatusInternalServerError, false, "Failed to encrypt password", nil)
+
 		}
 		user.Password = string(hashedPassword)
 	}
 
 	// save user to database
 	if err := configs.DB.Save(&user).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -310,11 +381,7 @@ func LoginUserController(c echo.Context) error {
 	}
 	userResponse := models.UserResponse{user.ID, user.Name, user.Email, user.Role, token}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		constans.SUCCESS: true,
-		constans.MESSAGE: "Success login",
-		constans.DATA:    userResponse,
-	})
+	return jsonResponse(c, http.StatusOK, true, "User successful login", userResponse)
 }
 
 func IsEmailRegistered(email string) bool {
@@ -328,4 +395,12 @@ func IsEmailRegistered(email string) bool {
 func validateEmail(email string) bool {
 	re := regexp.MustCompile(`^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$`)
 	return re.MatchString(email)
+}
+
+func jsonResponse(c echo.Context, status int, success bool, message string, data interface{}) error {
+	return c.JSON(status, map[string]interface{}{
+		constans.SUCCESS: success,
+		constans.MESSAGE: message,
+		constans.DATA:    data,
+	})
 }

@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -15,7 +17,8 @@ func AdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		if roleFloat != 1 {
 			c.Error(echo.ErrForbidden)
-			return echo.ErrForbidden
+			return jsonResponse(c, http.StatusForbidden, false, "Forbidden", nil)
+
 		}
 
 		// Otherwise, continue with the request.

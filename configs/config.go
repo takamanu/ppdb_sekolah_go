@@ -61,6 +61,7 @@ func InitGCB() (*storage.Client, string, error) {
 func InitDB() {
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", constans.DB_USERNAME, constans.DB_PASSWORD, constans.DB_HOST, constans.DB_PORT, constans.DB_DATABASE)
+	// dsn := fmt.Sprintf("root:@tcp(127.0.0.1:3306)/ppdb_smp?charset=utf8mb4&parseTime=True&loc=Local")
 	var err error
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {

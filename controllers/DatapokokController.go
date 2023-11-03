@@ -21,37 +21,110 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-func GetDatapokokController(c echo.Context) error {
+// func GetDatapokokController(c echo.Context) error {
 
-	var users []models.Datapokok
-	if err := configs.DB.Find(&users).Error; err != nil {
-		log.Errorf("Failed to get datapokok: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+// 	var users []models.Datapokok
+// 	if err := configs.DB.Find(&users).Error; err != nil {
+// 		log.Errorf("Failed to get datapokok: %s", err.Error())
+// 		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
+// 	}
+// 	return c.JSON(http.StatusOK, map[string]interface{}{
+// 		constans.SUCCESS: true,
+// 		constans.MESSAGE: "Success get all datapokok",
+// 		constans.DATA:    users,
+// 	})
+// }
+
+// func SearchDatapokokController(c echo.Context) error {
+// 	// Parse pagination parameters
+// 	paginationParams := ParsePaginationParams(c)
+
+// 	// Get the search query parameter for name
+// 	nameQuery := c.QueryParam("name")
+
+// 	// Initialize the query with the search and pagination parameters
+// 	query := configs.DB.Model(&models.Datapokok{})
+
+// 	// Apply the name search filter if the nameQuery is provided
+// 	if nameQuery != "" {
+// 		query = query.Where("nama_lengkap LIKE ?", "%"+nameQuery+"%")
+// 	}
+
+// 	var users []models.Datapokok
+
+// 	// Query the database with the search and pagination parameters
+// 	result, err := GetPaginatedData(c, query, paginationParams, users)
+// 	if err != nil {
+// 		log.Errorf("Failed to get datapokok: %s", err.Error())
+// 		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+// 	}
+
+// 	return c.JSON(http.StatusOK, map[string]interface{}{
+// 		constans.SUCCESS: true,
+// 		constans.MESSAGE: "Success get datapokok",
+// 		constans.DATA:    result,
+// 	})
+// }
+
+func GetDatapokokController(c echo.Context) error {
+	// Parse pagination parameters
+	paginationParams := ParsePaginationParams(c)
+
+	// Get the search query parameter from the request
+	searchQuery := c.QueryParam("search")
+
+	// Create a query builder
+	query := configs.DB.Model(&models.Datapokok{})
+
+	// Apply the search condition if a search query is provided
+	if searchQuery != "" {
+		query = query.Where("nama_lengkap LIKE ?", "%"+searchQuery+"%")
 	}
+
+	// Apply the pagination parameters
+	query = query.Limit(paginationParams.Limit).Offset(paginationParams.Limit * (paginationParams.Page - 1))
+
+	// Preload the "nilai" association
+	query = query.Preload("Nilai")
+
+	// Get the paginated results
+	var datapokokList []models.Datapokok
+	if err := query.Find(&datapokokList).Error; err != nil {
+		log.Errorf("Failed to get datapokok: %s", err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+	}
+
+	// Return the results
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
-		constans.MESSAGE: "Success get all datapokok",
-		constans.DATA:    users,
+		constans.MESSAGE: "Success get datapokok",
+		constans.DATA:    datapokokList,
 	})
 }
+
+// Use the same approach for other Get API functions
 
 func GetDatapokokControllerByID(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Errorf("Invalid id: %s", c.Param("id"))
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid id")
+		return jsonResponse(c, http.StatusBadRequest, false, "Invalid id", nil)
+
 	}
 
 	var user models.Datapokok
 	if err := configs.DB.First(&user, id).Error; err != nil {
 		log.Errorf("Failed to get datapokok with id %d: %s", id, err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
 	}
 
 	var nilai models.Nilai
 	if err := configs.DB.Where("datapokok_id = ?", id).First(&nilai).Error; err != nil {
 		log.Errorf("Failed to get nilai with datapokok_id %d: %s", id, err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
 	}
 
 	user.Nilai = append(user.Nilai, nilai)
@@ -74,7 +147,7 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	// Bind the request data from the JSON body
 	if err := c.Bind(&requestData); err != nil {
 		log.Errorf("Failed to bind request: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
 
 	}
 
@@ -82,7 +155,7 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
 	if err != nil {
 		log.Errorf("Failed to convert user_id to a uint: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user_id")
+		return jsonResponse(c, http.StatusBadRequest, false, "Invalid user_id", nil)
 	}
 
 	requestData.Datapokok.UserID = uint64(userIDDatapokok)
@@ -94,11 +167,11 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	requestData.Datapokok.TempatLahir = c.FormValue("tempat_lahir")
 
 	if IsEmailRegisteredDatapokok(requestData.Datapokok.Email) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Email address is already registered")
+		return jsonResponse(c, http.StatusBadRequest, false, "Email address is already registered", nil)
 	}
 
 	if IsNISNRegisteredDatapokok(requestData.Datapokok.NISN) {
-		return echo.NewHTTPError(http.StatusBadRequest, "NISN is already registered")
+		return jsonResponse(c, http.StatusBadRequest, false, "NISN is already registered", nil)
 	}
 
 	// Date of birth handling
@@ -116,20 +189,15 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	requestData.Datapokok.Jurusan = c.FormValue("jurusan")
 
 	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
 
-	// Create the Datapokok record in the database
-	if err := configs.DB.Create(&requestData.Datapokok).Error; err != nil {
-		log.Errorf("Failed to create datapokok: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// Handle file upload
 	image, err := c.FormFile("pas_foto")
 	if err != nil {
 		log.Errorf("Failed to get the image file: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Image upload failed")
+		return jsonResponse(c, http.StatusBadRequest, false, "Image upload failed", nil)
 	}
 
 	// Generate a unique filename using a UUID
@@ -143,16 +211,24 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	src, err := image.Open()
 	if err != nil {
 		log.Errorf("Failed to open the image file: %s", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process image")
+		return jsonResponse(c, http.StatusInternalServerError, false, "Failed to process image", nil)
+
 	}
 	defer src.Close()
 
 	if _, err = io.Copy(wc, src); err != nil {
 		log.Errorf("Failed to copy the image to the bucket: %s", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to upload image")
+		return jsonResponse(c, http.StatusInternalServerError, false, "Failed to upload image", nil)
 	}
 
 	requestData.Datapokok.PasFoto = "https://storage.googleapis.com/" + bucketName + "/" + uniqueFilename
+
+	// Create the Datapokok record in the database
+	if err := configs.DB.Create(&requestData.Datapokok).Error; err != nil {
+		log.Errorf("Failed to create datapokok: %s", err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
+	}
 
 	// Now requestData.Datapokok.ID contains the ID of the newly created Datapokok record
 	loger.Println("Created Datapokok with ID:", requestData.Datapokok.ID)
@@ -168,7 +244,8 @@ func CreateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	// Create the Nilai record in the database
 	if err := configs.DB.Create(&requestData.Nilai).Error; err != nil {
 		log.Errorf("Failed to create nilai: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
 	}
 
 	// requestData.Nilai.Utama
@@ -188,18 +265,19 @@ func DeleteDatapokokController(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		log.Errorf("Invalid id: %s", c.Param("id"))
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid id")
+		return jsonResponse(c, http.StatusBadRequest, false, "Invalid id", nil)
 	}
 
 	var user models.Datapokok
 	if err := configs.DB.First(&user, id).Error; err != nil {
 		log.Errorf("Failed to get datapokok with id %d: %v", id, err)
-		return echo.NewHTTPError(http.StatusNotFound, "User not found")
+		return jsonResponse(c, http.StatusNotFound, false, "User not found", nil)
+
 	}
 
 	if err := configs.DB.Delete(&user).Error; err != nil {
 		log.Errorf("Failed to delete datapokok with id %d: %v", id, err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to delete datapokok")
+		return jsonResponse(c, http.StatusInternalServerError, false, "Failed to delete datapokok", nil)
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -214,13 +292,13 @@ func UpdateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	// get user id from url param
 	userId, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid datapokok id")
+		return jsonResponse(c, http.StatusBadRequest, false, "Invalid datapokok id", nil)
 	}
 
 	// get user by id
 	var user models.Datapokok
 	if err := configs.DB.First(&user, userId).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Datapokok not found")
+		return jsonResponse(c, http.StatusBadRequest, false, "Datapokok not found", nil)
 	}
 
 	if c.FormValue("user_id") != "" {
@@ -228,7 +306,7 @@ func UpdateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 		userIDDatapokok, err := strconv.ParseUint(userIDDatapokokStr, 10, 0)
 		if err != nil {
 			log.Errorf("Failed to convert user_id to a uint: %s", err.Error())
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid user_id")
+			return jsonResponse(c, http.StatusBadRequest, false, "Invalid user_id", nil)
 		}
 
 		user.UserID = uint64(userIDDatapokok)
@@ -293,7 +371,8 @@ func UpdateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 	// // Create the Datapokok record in the database
 	// if err := configs.DB.Create(&requestData.Datapokok).Error; err != nil {
 	// 	log.Errorf("Failed to create datapokok: %s", err.Error())
-	// 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	// 			return jsonResponse(c, http.StatusBadRequest, false,  err.Error(), nil)
+
 	// }
 
 	// Handle file upload
@@ -311,35 +390,38 @@ func UpdateDatapokokController(c echo.Context, client *storage.Client, bucketNam
 		src, err := image.Open()
 		if err != nil {
 			log.Errorf("Failed to open the image file: %s", err.Error())
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process image")
+			return jsonResponse(c, http.StatusInternalServerError, false, "Failed to process image", nil)
 		}
 		defer src.Close()
 
 		if _, err = io.Copy(wc, src); err != nil {
 			log.Errorf("Failed to copy the image to the bucket: %s", err.Error())
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to upload image")
+			return jsonResponse(c, http.StatusInternalServerError, false, "Failed to upload image", nil)
 		}
 
 		user.PasFoto = "https://storage.googleapis.com/" + bucketName + "/" + uniqueFilename
 	}
 
 	if c.Request().Method == "PUT" && user.Nilai != nil {
-		return echo.NewHTTPError(http.StatusForbidden, "You cant update user nilai")
+		return jsonResponse(c, http.StatusForbidden, false, "You cant update user nilai", nil)
+
 	}
 
 	// // validate user fields
 	// if err := ValidateDatapokokFields(user); err != nil {
-	// 	return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	// 			return jsonResponse(c, http.StatusBadRequest, false,  err.Error(), nil)
+
 	// }
 
 	// update user to database
 	if err := configs.DB.Save(&user).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
 	}
 
 	var nilai models.Nilai
 	if err := configs.DB.Where("datapokok_id = ?", user.ID).First(&nilai).Error; err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Datapokok not found")
+		return jsonResponse(c, http.StatusBadRequest, false, "Datapokok not found", nil)
 	}
 
 	user.Nilai = append(user.Nilai, nilai)
@@ -361,14 +443,16 @@ func GetDatapokokControllerSiswa(c echo.Context) error {
 	var user models.Datapokok
 	if err := configs.DB.Where("user_id = ?", userId).First(&user).Error; err != nil {
 		log.Errorf("Failed to get user with user_id %d: %s", userId, err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
 	}
 
 	// GET THE NILAIS FROM THE DATABASE
 	var nilai models.Nilai
 	if err := configs.DB.Where("datapokok_id = ?", user.ID).First(&nilai).Error; err != nil {
 		log.Errorf("Failed to get nilai with datapokok_id %d: %s", userId, err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
 	}
 
 	// APPEND THE NILAIS TO THE USER
@@ -386,7 +470,7 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 
 	userId, ok := c.Get("userId").(float64)
 	if !ok {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID")
+		return jsonResponse(c, http.StatusBadRequest, false, "Invalid user ID", nil)
 	}
 
 	// Create a request structure that includes Datapokok and Nilai data
@@ -398,7 +482,7 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 	// Bind the request data from the JSON body
 	if err := c.Bind(&requestData); err != nil {
 		log.Errorf("Failed to bind request: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
 
 	}
 
@@ -411,11 +495,11 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 	requestData.Datapokok.TempatLahir = c.FormValue("tempat_lahir")
 
 	if IsEmailRegisteredDatapokok(requestData.Datapokok.Email) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Email address is already registered")
+		return jsonResponse(c, http.StatusBadRequest, false, "Email address is already registered", nil)
 	}
 
 	if IsNISNRegisteredDatapokok(requestData.Datapokok.NISN) {
-		return echo.NewHTTPError(http.StatusBadRequest, "NISN is already registered")
+		return jsonResponse(c, http.StatusBadRequest, false, "NISN is already registered", nil)
 	}
 
 	// Date of birth handling
@@ -433,20 +517,22 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 	requestData.Datapokok.Jurusan = c.FormValue("jurusan")
 
 	if err := ValidateDatapokokFields(requestData.Datapokok); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
 	}
 
 	// Create the Datapokok record in the database
 	if err := configs.DB.Create(&requestData.Datapokok).Error; err != nil {
 		log.Errorf("Failed to create datapokok: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
 	}
 
 	// Handle file upload
 	image, err := c.FormFile("pas_foto")
 	if err != nil {
 		log.Errorf("Failed to get the image file: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, "Image upload failed")
+		return jsonResponse(c, http.StatusBadRequest, false, "Image upload failed", nil)
 	}
 
 	// Generate a unique filename using a UUID
@@ -460,13 +546,13 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 	src, err := image.Open()
 	if err != nil {
 		log.Errorf("Failed to open the image file: %s", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to process image")
+		return jsonResponse(c, http.StatusInternalServerError, false, "Failed to process image", nil)
 	}
 	defer src.Close()
 
 	if _, err = io.Copy(wc, src); err != nil {
 		log.Errorf("Failed to copy the image to the bucket: %s", err.Error())
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to upload image")
+		return jsonResponse(c, http.StatusInternalServerError, false, "Failed to upload image", nil)
 	}
 
 	requestData.Datapokok.PasFoto = "https://storage.googleapis.com/" + bucketName + "/" + uniqueFilename
@@ -485,7 +571,8 @@ func CreateDatapokokControllerSiswa(c echo.Context, client *storage.Client, buck
 	// Create the Nilai record in the database
 	if err := configs.DB.Create(&requestData.Nilai).Error; err != nil {
 		log.Errorf("Failed to create nilai: %s", err.Error())
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
+
 	}
 
 	// requestData.Nilai.Utama
