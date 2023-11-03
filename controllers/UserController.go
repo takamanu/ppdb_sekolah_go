@@ -36,9 +36,9 @@ func GetUsersController(c echo.Context) error {
 	// Define a slice to store the results
 	var users []models.User
 
-	// Create a query with the Datapokok association preloaded
-	if err := query.Preload("Datapokok").Find(&users).Error; err != nil {
-		log.Errorf("Failed to preload datapokok for users: %s", err.Error())
+	// Create a query with both the Datapokok and Nilai associations preloaded
+	if err := query.Preload("Datapokok").Preload("Datapokok.Nilai").Find(&users).Error; err != nil {
+		log.Errorf("Failed to preload datapokok and nilai for users: %s", err.Error())
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			constans.SUCCESS: false,
 			constans.MESSAGE: err.Error(),
@@ -55,7 +55,7 @@ func GetUsersController(c echo.Context) error {
 		})
 	}
 
-	// Return the paginated users with proper datapokok associations
+	// Return the paginated users with proper datapokok and nilai associations
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
 		constans.MESSAGE: "Success get all users",
