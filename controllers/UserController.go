@@ -20,46 +20,37 @@ import (
 
 func GetUsersController(c echo.Context) error {
 	// Get the search parameter
-	search := c.QueryParam("search")
-
-	// Initialize the query variable
-	query := configs.DB
-
-	// If the search parameter is not empty, add a condition to the query
-	if search != "" {
-		query = query.Where("name LIKE ?", "%"+search+"%")
-	}
-
-	// Parse the pagination parameters
 	paginationParams := ParsePaginationParams(c)
 
-	// Define a slice to store the results
-	var users []models.User
+	// Get the search query parameter from the request
+	searchQuery := c.QueryParam("search")
 
-	// Create a query with both the Datapokok and Nilai associations preloaded
-	if err := query.Preload("Datapokok").Preload("Datapokok.Nilai").Find(&users).Error; err != nil {
-		log.Errorf("Failed to preload datapokok and nilai for users: %s", err.Error())
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			constans.SUCCESS: false,
-			constans.MESSAGE: err.Error(),
-		})
+	// Create a query builder
+	query := configs.DB.Model(&models.User{})
+
+	// Apply the search condition if a search query is provided
+	if searchQuery != "" {
+		query = query.Where("nama LIKE ?", "%"+searchQuery+"%")
 	}
 
-	// Get the paginated data
-	paginatedData, err := GetPaginatedData(c, query, paginationParams, &users)
-	if err != nil {
-		log.Errorf("Failed to get paginated users: %s", err.Error())
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			constans.SUCCESS: false,
-			constans.MESSAGE: err.Error(),
-		})
+	// Apply the pagination parameters
+	query = query.Limit(paginationParams.Limit).Offset(paginationParams.Limit * (paginationParams.Page - 1))
+
+	// Preload the "nilai" association
+	query = query.Preload("Datapokok")
+
+	// Get the paginated results
+	var users []models.User
+	if err := query.Find(&users).Error; err != nil {
+		log.Errorf("Failed to get datapokok: %s", err.Error())
+		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
 	}
 
 	// Return the paginated users with proper datapokok and nilai associations
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
 		constans.MESSAGE: "Success get all users",
-		constans.DATA:    paginatedData,
+		constans.DATA:    users,
 	})
 }
 
