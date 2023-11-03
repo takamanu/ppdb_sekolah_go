@@ -33,10 +33,11 @@ func GetUsersController(c echo.Context) error {
 	// Parse the pagination parameters
 	paginationParams := ParsePaginationParams(c)
 
-	// Prefetch the datapokok for each user
+	// Define a slice to store the results
 	var users []models.User
-	with := query.Preload("Datapokok").Preload("Datapokok.Nilai")
-	if err := with.Find(&users).Error; err != nil {
+
+	// Create a query with the Datapokok association preloaded
+	if err := query.Preload("Datapokok").Find(&users).Error; err != nil {
 		log.Errorf("Failed to preload datapokok for users: %s", err.Error())
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			constans.SUCCESS: false,
@@ -45,7 +46,7 @@ func GetUsersController(c echo.Context) error {
 	}
 
 	// Get the paginated data
-	_, err := GetPaginatedData(c, query, paginationParams, &users)
+	paginatedData, err := GetPaginatedData(c, query, paginationParams, &users)
 	if err != nil {
 		log.Errorf("Failed to get paginated users: %s", err.Error())
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -54,11 +55,11 @@ func GetUsersController(c echo.Context) error {
 		})
 	}
 
-	// Return the paginated users with datapokok
+	// Return the paginated users with proper datapokok associations
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
 		constans.MESSAGE: "Success get all users",
-		constans.DATA:    users,
+		constans.DATA:    paginatedData,
 	})
 }
 
