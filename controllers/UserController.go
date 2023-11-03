@@ -47,6 +47,10 @@ func GetUsersController(c echo.Context) error {
 		return jsonResponse(c, http.StatusBadRequest, false, err.Error(), nil)
 	}
 
+	for i := range users {
+		users[i].Password = "******"
+	}
+
 	// Return the paginated users with proper datapokok and nilai associations
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
