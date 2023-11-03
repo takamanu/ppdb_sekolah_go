@@ -30,7 +30,7 @@ func GetUsersController(c echo.Context) error {
 
 	// Apply the search condition if a search query is provided
 	if searchQuery != "" {
-		query = query.Where("nama LIKE ?", "%"+searchQuery+"%")
+		query = query.Where("name LIKE ?", "%"+searchQuery+"%")
 	}
 
 	// Apply the pagination parameters
