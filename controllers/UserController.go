@@ -35,7 +35,8 @@ func GetUsersController(c echo.Context) error {
 
 	// Prefetch the datapokok for each user
 	var users []models.User
-	if err := query.Preload("Datapokok").Find(&users).Error; err != nil {
+	with := query.Preload("Datapokok").Preload("Datapokok.Nilai")
+	if err := with.Find(&users).Error; err != nil {
 		log.Errorf("Failed to preload datapokok for users: %s", err.Error())
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			constans.SUCCESS: false,
@@ -51,23 +52,6 @@ func GetUsersController(c echo.Context) error {
 			constans.SUCCESS: false,
 			constans.MESSAGE: err.Error(),
 		})
-	}
-
-	for i := range users {
-		// Prefetch the nilai field for the datapokok
-		if err := configs.DB.Preload("Nilai").Find(&users[i].Datapokok).Error; err != nil {
-			log.Errorf("Failed to preload nilai for datapokok with id:", err.Error())
-			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
-				constans.SUCCESS: false,
-				constans.MESSAGE: err.Error(),
-			})
-		}
-	}
-
-	// Extract the datapokok objects from the users
-	var datapokokList []models.Datapokok
-	for _, user := range users {
-		datapokokList = append(datapokokList, user.Datapokok...)
 	}
 
 	// Return the paginated users with datapokok
