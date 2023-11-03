@@ -37,7 +37,8 @@ func GetUsersController(c echo.Context) error {
 	query = query.Limit(paginationParams.Limit).Offset(paginationParams.Limit * (paginationParams.Page - 1))
 
 	// Preload the "nilai" association
-	query = query.Preload("Datapokok")
+	// Preload the "datapokok" and "nilai" associations
+	query = query.Preload("Datapokok.Nilai")
 
 	// Get the paginated results
 	var users []models.User
