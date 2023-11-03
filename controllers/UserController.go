@@ -74,7 +74,7 @@ func GetUsersController(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		constans.SUCCESS: true,
 		constans.MESSAGE: "Success get all users",
-		constans.DATA:    datapokokList,
+		constans.DATA:    users,
 	})
 }
 
